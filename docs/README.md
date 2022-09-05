@@ -8,17 +8,17 @@ navbar: false
 pageClass: custom-page-class 
 ---
 
-# BlackSiao's Note
+<img :src="$withBase('/owl.gif')" alt="foo">  
 
+# BlackSiao's Note  
 
-
-*此项目为初学vuepress的尝试，想必是漏洞百出欢迎您的指正*
+## *此项目为初学vuepress的尝试，想必是漏洞百出欢迎您的指正*
 
 目录:   
-> - [摸鱼精选](fish/index)
-> - [天天向上](up/index)
-> - [成为英雄](成为英雄/index)
-> - [杂七杂八](杂七杂八/index)
+> - [摸鱼精选](salted_fish/index)
+> - [天天向上](rise_up/index)
+> - [成为英雄](become_hero/index)
+> - [杂七杂八](others/index)
 
 
 
