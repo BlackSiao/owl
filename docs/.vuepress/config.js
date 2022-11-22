@@ -61,6 +61,15 @@ module.exports = {
                         {
                             title: "李安《父亲三部曲》",
                             path: "/salted_fish/movie/李安"
+                        },
+                        {
+                            title: "《隐入尘烟》",
+                            path: "/salted_fish/movie/隐入尘烟"
+                        },
+                        {
+                            title: "《西线无战事》",
+                            path: "/salted_fish/movie/西线无战事"
+                            
                         }
 
                     ]
@@ -68,8 +77,15 @@ module.exports = {
                 }
             ],
             "/rise_up/": [
-                'up-a',
-                'up-b',
+                {
+                    title: 'C++',
+                    path: '/rise_up/C++'
+                },
+                {
+                    title: '计算机网络',
+                    path: '/rise_up/网络原理'
+                }
+                
 
             ]
         }
