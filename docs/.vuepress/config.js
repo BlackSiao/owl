@@ -70,6 +70,10 @@ module.exports = {
                             title: "《西线无战事》",
                             path: "/salted_fish/movie/西线无战事"
                             
+                        },
+                        {
+                            title: "《小武》",
+                            pathL: "salted_fish/movie/小武"
                         }
 
                     ]

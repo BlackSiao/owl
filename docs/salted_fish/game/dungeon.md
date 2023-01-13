@@ -2,18 +2,18 @@
 # Ruin has come to our family......
 ## 暗黑地牢以它的高难度和独特的克苏鲁风格使得一大票玩家沉迷于其中
 
-<img :src="$withBase('/DD1.jpg')" alt="foo">
+<img :src="$withBase('/game/DD1.jpg')" alt="foo">
  
   # 有趣的游戏设定
   克苏鲁风格的游戏就不离开sane值的设定，暗黑地牢也不例外，玩家操作的角色除了血量之外还有压力值的设定  
   在压力值达到100的时候将随机出现"美德"或者"折磨"二种状态，为战斗提供了更多的不确定性。
-<img :src="$withBase('/DD2.png')" alt="foo">
+<img :src="$withBase('/game/DD2.png')" alt="foo">
  
   ## 怪癖和特质和疾病
   每次下本之后，角色都会获得随机的怪癖，特质，在某些特殊的地图还会增加患病的可能，清理debuff怪癖，保留
   正向特质的流程，使得不能一个角色玩到头，你得多训练几支队伍轮换出任务。
  
-<img :src="$withBase('/dungeon.png')" alt="foo">
+<img :src="$withBase('/game/dungeon.png')" alt="foo">
 
  ## 波荡起伏的战斗
   And now the true test,hold fast or expire  
