@@ -1,88 +1,111 @@
 import tkinter as tk
+import sqlite3
 from tkinter import ttk
 
-def show_task_details(event):
-    selected_item = task_list.focus()
-    if selected_item:
-        details_var.set(task_data.get(selected_item, "No details available"))
+# 创建/连接数据库
+conn = sqlite3.connect("tasks.db")
+cursor = conn.cursor()
 
-def add_task():
-    new_task = entry_task.get()
-    if new_task:
-        category = category_var.get()
-        if category:
-            item_id = task_views[category].insert("", "end", text=new_task)
-            task_data[item_id] = "Task Details: " + new_task  # 临时存储任务详情
-            entry_task.delete(0, tk.END)
+# 创建任务表（如果不存在）
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category TEXT NOT NULL,
+        name TEXT NOT NULL,
+        deadline TEXT NOT NULL
+    )
+''')
+conn.commit()
 
-def archive_task():
-    selected_item = task_list.focus()
-    if selected_item:
-        archived_tasks.insert("", "end", text=task_list.item(selected_item, "text"))
-        task_list.delete(selected_item)
+# 预填充示例任务（仅执行一次）
+sample_tasks = [
+    ("日常清单", "吃饭", "12:00"),
+    ("日常清单", "学习 Python", "14:00"),
+    ("主线任务", "击败Boss", "2025-03-30"),
+    ("支线任务", "收集5个金币", "2025-03-22"),
+    ("已归档任务", "完成新手教程", "2025-03-10")
+]
 
-def toggle_visibility(category):
-    if treeview_states[category].get():
-        task_views[category].pack(fill=tk.BOTH, expand=True)
-    else:
-        task_views[category].pack_forget()
+# 检查是否已填充数据
+cursor.execute("SELECT COUNT(*) FROM tasks")
+if cursor.fetchone()[0] == 0:
+    cursor.executemany("INSERT INTO tasks (category, name, deadline) VALUES (?, ?, ?)", sample_tasks)
+    conn.commit()
 
-task_data = {}
+conn.close()  # 关闭数据库连接
 
-treeview_states = {}
-task_views = {}
+# 任务管理界面
+root = tk.Tk()
+root.title("RPG 任务栏")
+root.geometry("600x400")
+
+# 任务类别
+categories = ["日常清单", "主线任务", "支线任务", "已归档任务"]
+selected_option = tk.StringVar(root)
+selected_option.set(categories[0])  # 默认选择第一个类别
+
+# 任务列表框
+task_listbox = tk.Listbox(root)
+task_listbox.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+
+# **查询并显示任务**
+def ShowTask(selected_category):
+    task_listbox.delete(0, tk.END)  # 清空列表
+
+    conn = sqlite3.connect("tasks.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT name, deadline FROM tasks WHERE category = ?", (selected_category,))
+    tasks = cursor.fetchall()
+    
+    conn.close()
+
+    # 将查询到的任务添加到任务列表框
+    for name, deadline in tasks:
+        task_listbox.insert(tk.END, f"{name} - 截止: {deadline}")
+
+# 显示任务列表
+def ShowTask(selected_category):
+    # 清空左侧任务列表
+    task_listbox.delete(0, tk.END)
+
+    # 获取当前选择的任务数据
+    tasks = task_data.get(selected_category, [])
+    
+    # 显示任务到左侧面板
+    for task_name, task_deadline in tasks:
+        task_listbox.insert(tk.END, f"{task_name} - 截止: {task_deadline}")
 
 # 开始进行页面布局
 root = tk.Tk()
-root.title("RPG 任务管理系统")
+root.title("RPG 任务栏")
 root.geometry("600x400")
+
+# 设置下拉菜单
+categories = ["日常清单", "主线任务", "支线任务", "已归档任务"]
+
+# 创建StringVar对象
+selected_option = tk.StringVar(root)
+selected_option.set(categories[0])
+
+# 创建选项菜单对象（command 传函数名，不要加括号）
+option_menu = tk.OptionMenu(root, selected_option, *categories, command=ShowTask)
+option_menu.pack(side=tk.TOP, fill=tk.X, padx=200)
+
 # 设置页面左边栏
 frame_left = tk.Frame(root, width=200, bg="#ddd")
 frame_left.pack(side=tk.LEFT, fill=tk.Y)
+
+# 创建 Listbox 来显示任务
+task_listbox = tk.Listbox(frame_left)
+task_listbox.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
 # 设置页面右边栏
 frame_right = tk.Frame(root, width=400, bg="#fff")
 frame_right.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-# 设置主要内容
-categories = ["主线任务", "支线任务", "日常清单", "已归档任务"]
-for cat in categories:
-    # 创建一个BooleanVar变量来控制类别的显示状态
-    treeview_states[cat] = tk.BooleanVar(value=True)
-    # 创建一个新的fram,水平的填充到左边栏
-    frame_cat = tk.Frame(frame_left, bg="#ddd")
-    frame_cat.pack(fill=tk.X)
-    # 设置复选按钮，实现下拉菜单的功能
-    toggle_btn = tk.Checkbutton(
-        frame_cat, 
-        text=cat,
-        bg="#ddd", 
-        font=("Arial", 12, "bold"), 
-        variable=treeview_states[cat], 
-        command=lambda c=cat: toggle_visibility(c))
-    toggle_btn.pack(side=tk.LEFT, anchor="w")
-    
-    task_views[cat] = ttk.Treeview(frame_left)
-    task_views[cat].pack(fill=tk.BOTH, expand=True)
+# 先显示默认的“日常清单”任务
+ShowTask(categories[0])
 
-task_list = ttk.Treeview(frame_left)
-task_list.pack(fill=tk.BOTH, expand=True)
-task_list.bind("<Motion>", show_task_details)
-
-details_var = tk.StringVar()
-details_label = tk.Label(frame_right, textvariable=details_var, wraplength=350, justify="left", bg="#fff")
-details_label.pack(pady=20)
-
-entry_task = tk.Entry(frame_left)
-entry_task.pack(fill=tk.X)
-category_var = tk.StringVar(value="主线任务")
-category_menu = ttk.Combobox(frame_left, textvariable=category_var, values=categories)
-category_menu.pack(fill=tk.X)
-btn_add = tk.Button(frame_left, text="添加任务", command=add_task)
-btn_add.pack(fill=tk.X)
-btn_archive = tk.Button(frame_left, text="归档任务", command=archive_task)
-btn_archive.pack(fill=tk.X)
-
-archived_tasks = ttk.Treeview(frame_left)
-archived_tasks.pack(fill=tk.BOTH, expand=True)
-
+# 运行主循环s
 root.mainloop()

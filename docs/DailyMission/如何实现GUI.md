@@ -39,3 +39,11 @@ root.mainloop()
 
 ## 控件布局
 
+
+
+
+## 值得注意的点
+
+(1) StringVar对象
+在TK中，设置控件内text的方法不是直接label.txt什么的，而是通过StringVar对象来实现。label.StringVar.set("hello")
+
