@@ -1,111 +1,81 @@
 import tkinter as tk
 import sqlite3
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
-# 创建/连接数据库
-conn = sqlite3.connect("tasks.db")
+# 连接数据库
+conn = sqlite3.connect("Daily.db")
 cursor = conn.cursor()
 
-# 创建任务表（如果不存在）
+# 确保任务表存在
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        category TEXT NOT NULL,
         name TEXT NOT NULL,
-        deadline TEXT NOT NULL
+        priority TEXT NOT NULL CHECK(priority IN ('高', '中', '低'))
     )
 ''')
 conn.commit()
 
-# 预填充示例任务（仅执行一次）
-sample_tasks = [
-    ("日常清单", "吃饭", "12:00"),
-    ("日常清单", "学习 Python", "14:00"),
-    ("主线任务", "击败Boss", "2025-03-30"),
-    ("支线任务", "收集5个金币", "2025-03-22"),
-    ("已归档任务", "完成新手教程", "2025-03-10")
-]
-
-# 检查是否已填充数据
-cursor.execute("SELECT COUNT(*) FROM tasks")
-if cursor.fetchone()[0] == 0:
-    cursor.executemany("INSERT INTO tasks (category, name, deadline) VALUES (?, ?, ?)", sample_tasks)
-    conn.commit()
-
-conn.close()  # 关闭数据库连接
-
-# 任务管理界面
-root = tk.Tk()
-root.title("RPG 任务栏")
-root.geometry("600x400")
-
-# 任务类别
-categories = ["日常清单", "主线任务", "支线任务", "已归档任务"]
-selected_option = tk.StringVar(root)
-selected_option.set(categories[0])  # 默认选择第一个类别
-
-# 任务列表框
-task_listbox = tk.Listbox(root)
-task_listbox.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
-
-# **查询并显示任务**
-def ShowTask(selected_category):
-    task_listbox.delete(0, tk.END)  # 清空列表
-
-    conn = sqlite3.connect("tasks.db")
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT name, deadline FROM tasks WHERE category = ?", (selected_category,))
-    tasks = cursor.fetchall()
-    
-    conn.close()
-
-    # 将查询到的任务添加到任务列表框
-    for name, deadline in tasks:
-        task_listbox.insert(tk.END, f"{name} - 截止: {deadline}")
-
 # 显示任务列表
-def ShowTask(selected_category):
-    # 清空左侧任务列表
-    task_listbox.delete(0, tk.END)
+def show_tasks():
+    task_listbox.delete(0, tk.END)  # 清空现有任务
 
-    # 获取当前选择的任务数据
-    tasks = task_data.get(selected_category, [])
-    
-    # 显示任务到左侧面板
-    for task_name, task_deadline in tasks:
-        task_listbox.insert(tk.END, f"{task_name} - 截止: {task_deadline}")
+    cursor.execute("SELECT * FROM tasks")
+    tasks = cursor.fetchall()
 
-# 开始进行页面布局
+    for task in tasks:
+        task_listbox.insert(tk.END, f"{task[0]}. {task[1]} - {task[2]}")  # 格式化显示
+
+# 添加新任务
+def add_task():
+    task_name = task_entry.get().strip()
+    task_priority = priority_var.get()
+
+    if not task_name:
+        messagebox.showwarning("输入错误", "任务名称不能为空！")
+        return
+
+    cursor.execute("INSERT INTO tasks (name, priority) VALUES (?, ?)", (task_name, task_priority))
+    conn.commit()
+    show_tasks()  # 重新加载任务列表
+    task_entry.delete(0, tk.END)  # 清空输入框
+
+# 创建 GUI
 root = tk.Tk()
 root.title("RPG 任务栏")
 root.geometry("600x400")
 
-# 设置下拉菜单
-categories = ["日常清单", "主线任务", "支线任务", "已归档任务"]
-
-# 创建StringVar对象
-selected_option = tk.StringVar(root)
-selected_option.set(categories[0])
-
-# 创建选项菜单对象（command 传函数名，不要加括号）
-option_menu = tk.OptionMenu(root, selected_option, *categories, command=ShowTask)
-option_menu.pack(side=tk.TOP, fill=tk.X, padx=200)
-
-# 设置页面左边栏
-frame_left = tk.Frame(root, width=200, bg="#ddd")
+# 左侧任务栏
+frame_left = tk.Frame(root, width=250, bg="#ddd")
 frame_left.pack(side=tk.LEFT, fill=tk.Y)
-
-# 创建 Listbox 来显示任务
 task_listbox = tk.Listbox(frame_left)
 task_listbox.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-# 设置页面右边栏
-frame_right = tk.Frame(root, width=400, bg="#fff")
+# 右侧任务管理
+frame_right = tk.Frame(root, width=350, bg="#fff")
 frame_right.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-# 先显示默认的“日常清单”任务
-ShowTask(categories[0])
+title_label = tk.Label(frame_right, text="📒 日常清单", font=("Arial", 14, "bold"))
+title_label.pack(pady=10)
 
-# 运行主循环s
+# 任务输入框
+task_entry = tk.Entry(frame_right, width=30)
+task_entry.pack(pady=5)
+
+# 任务优先级选择
+priority_var = tk.StringVar(value="中")
+priority_menu = ttk.Combobox(frame_right, textvariable=priority_var, values=["高", "中", "低"], state="readonly")
+priority_menu.pack(pady=5)
+
+# 添加任务按钮
+add_task_button = tk.Button(frame_right, text="添加任务", command=add_task, bg="green", fg="white")
+add_task_button.pack(pady=10)
+
+# 先加载任务
+show_tasks()
+
+# 运行 GUI
 root.mainloop()
+
+# 关闭数据库
+conn.close()
